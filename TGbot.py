@@ -31,12 +31,17 @@ dp = Dispatcher()
 #
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    mexc_fut = mexc.get_futures_mexc_price("JUP_USDT") 
+    mexc_fut = mexc.get_futures_mexc_price("JUP_USDT")
     mexc_spot = mexc.get_spot_mexc_price("JUPUSDT")
     dex_price = ds.GetDexScreenerPrice("solana", "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN")
     spred1 = round(100 - ((float(mexc_fut)/float(dex_price))*100), 5)
     spred2 = round(100 - ((float(mexc_spot)/float(dex_price))*100), 5)
-    
+
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN")],
+        [types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/JUP_USDT?utm_source=mexc&utm_medium=pagehowtobuyfuturesbuttonJUP&utm_campaign=pagefuturesJUP&inviteCode=mexc-HtbFuBuFutu")]
+    ])
+
     await message.answer(
         fmt.text(
             fmt.text(fmt.hbold("Token:  JUP")),
@@ -45,24 +50,12 @@ async def cmd_start(message: types.Message):
             fmt.text(fmt.hbold("SPOT-DEX"), spred2),
             fmt.text(fmt.hbold("MEXC Futures"), mexc_fut),
             fmt.text(fmt.hbold("DEX Screener"), dex_price),
-            sep="\n\n", 
+            sep="\n\n",
 
-        ), parse_mode="HTML"
+        ),
+        parse_mode="HTML",
+        reply_markup=keyboard  # Добавляем клавиатуру к сообщению
     )
-
-@dp.message(Command("start"))
-async def cmd_inline_url(message: types.Message):
-    """Отправляет сообщение с inline кнопками-ссылками."""
-    buttons = [
-        types.InlineKeyboardButton(text="GitHub", url="https://github.com"),
-        types.InlineKeyboardButton(text="Оф. канал Telegram", url="tg://resolve?domain=telegram")
-    ]
-
-    # Создаем inline_keyboard как список списков.
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[buttons])  # Все кнопки в одной строке
-
-    await message.answer("Кнопки-ссылки", reply_markup=keyboard)
-
 
 # Запуск процесса поллинга новых апдейтов
 async def main():
