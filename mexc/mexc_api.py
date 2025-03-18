@@ -22,11 +22,11 @@ def get_spot_mexc_price(symbol):
         return price
 
     except requests.exceptions.RequestException as e:
-        print(f"Ошибка при запросе к API MEXC: {e}")
+        #print(f"Ошибка при запросе к API MEXC: {e}")
         return None
 
     except (KeyError, json.JSONDecodeError) as e:
-        print(f"Ошибка при обработке ответа API: {e}")
+        #print(f"Ошибка при обработке ответа API: {e}")
         return None
 
 
@@ -41,9 +41,9 @@ def get_futures_mexc_price(symbol):
         return price
 
     except requests.exceptions.RequestException as e:
-        print(f"Ошибка при запросе к API MEXC: {e}")
+        #print(f"Ошибка при запросе к API MEXC: {e}")
         return None
 
     except (KeyError, json.JSONDecodeError) as e:
-        print(f"Ошибка при обработке ответа API: {e}")
+        #print(f"Ошибка при обработке ответа API: {e}")
         return None
