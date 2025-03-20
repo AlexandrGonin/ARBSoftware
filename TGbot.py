@@ -22,8 +22,8 @@ bot = Bot(token="7619938635:AAGumItYqcYnXOmHFK5zoDlLkTroU4MRkV8")
 dp = Dispatcher()
 
 delay = 0
+chat_id=1353395168
 
-max_spred=0
 
 types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"), types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/JUP_USDT?utm_source=mexc&utm_medium=pagehowtobuyfuturesbuttonJUP&utm_campaign=pagefuturesJUP&inviteCode=mexc-HtbFuBuFutu")
 
@@ -32,24 +32,65 @@ types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJ
 
 KET = ["KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7"]
 DHN = ["DHN_USDT", "DHNyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-YZYSQL = ["YZYSQL_USDT", "YZYSQLyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
+YZYSQL = ["YZYSQL_USDT", "YZYSQLyiwrYJFskUPiHa7hkeR8V UtAeFoSYbKedZNsDvCN"]
 EGG = ["EGG_USDT", "EGGyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
 A8 = ["A8_USDT", "A8yiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
 
+async def condition_check_loop(chat_id):
+    max_spred=0
+    cond = False
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/KET_USDT")]
+    ])
+    while True:
+        mexc_fut = [mexc.get_futures_mexc_price(KET[0])]
+        dex_price = [ds.GetDexScreenerPrice("avalanche", KET[1])]
+        spred = round(100 - ((float(mexc_fut[0])/float(dex_price[0]))*100), 5)
+        # spred2 = round(100 - ((float(mexc_spot)/float(dex_price))*100), 5)
+        if abs(spred)>max_spred:
+            max_spred=abs(spred)
 
-while True:
-    mexc_fut = [mexc.get_futures_mexc_price(KET[0])]
-    dex_price = [ds.GetDexScreenerPrice("avalanche", KET[1])]
-    spred = round(100 - ((float(mexc_fut[0])/float(dex_price[0]))*100), 5)
-    # spred2 = round(100 - ((float(mexc_spot)/float(dex_price))*100), 5)
-    if abs(spred)>max_spred:
-        max_spred=abs(spred)
+        print(mexc_fut, dex_price, spred, max_spred)
+        time.sleep(delay)
 
-    print(mexc_fut, dex_price, spred, max_spred)
-    time.sleep(delay)
+        if abs(spred) > 4 and cond == False:
+            await bot.send_message(chat_id,
+                fmt.text(
+                    fmt.text(fmt.hbold("Token:  KET")),
+                    fmt.text(fmt.hbold("MEXC Futures"), mexc_fut),
+                    fmt.text(fmt.hbold("DEX Screener"), dex_price),
+                    fmt.text(fmt.hbold("Спред: "),  spred),
+                    fmt.text(fmt.hbold("Открыть short")),
+                    
+                    sep="\n\n",),parse_mode="HTML",reply_markup=keyboard)  # Добавляем клавиатуру к сообщению
+            cond = True
+        elif abs(spred) < 1 and cond == True:
+            cond = False
+            await bot.send_message(chat_id,
+                fmt.text(
+                    fmt.text(fmt.hbold("Token:  KET")),
+                    fmt.text(fmt.hbold("MEXC Futures"), mexc_fut),
+                    fmt.text(fmt.hbold("DEX Screener"), dex_price),
+                    fmt.text(fmt.hbold("Спред: "),  spred),
+                    fmt.text(fmt.hbold("Закрыть short")),
+                    sep="\n\n",), parse_mode="HTML",reply_markup=keyboard)
+
+        #await bot.send_message(chat_id, "Цена mex_fut: "+str(*mexc_fut)+" Цена dex: "+str(dex_price)+" Спред: "+str(spred)+" Макс. спред: "+str(max_spred))
     
+@dp.message(Command("start"))
+async def subscribe_to_condition(message: types.Message):
+    chat_id = message.chat.id
+    # Правильный вызов асинхронной функции с использованием await
+    await condition_check_loop(chat_id)
 
+async def main():
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.session.close()
 
+if __name__ == "__main__":
+    asyncio.run(main())
 
 #print("MEXC Futures price: ", mexc.get_futures_mexc_price("JUP_USDT"))
 #print("MEXC Spot price: ", mexc.get_spot_mexc_price("JUPUSDT"))

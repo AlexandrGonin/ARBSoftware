@@ -1,28 +1,33 @@
-import sys
-sys.path.append("dex screener")
-sys.path.append("gmgn")
-sys.path.append("mexc")
-import dex_screener_api as ds
-#import gmgn_api as gmgn
-import mexc_api as mexc
-
 import asyncio
-import logging
-import aiogram
-import time
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters.command import Command
-from aiogram.utils.markdown import bold
-import aiogram.utils.markdown as fmt
-KET = ["KET_USDT", "KETUSDT", "KETyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-DHN = ["DHN_USDT", "DHNUSDT", "DHNyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-YZYSQL = ["YZYSQL_USDT", "YZYSQLUSDT", "YZYSQLyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-EGG = ["EGG_USDT", "EGGUSDT", "EGGyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-A8 = ["A8_USDT", "A8USDT", "A8yiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"
-        ]
-while True:
-    dex = ds.GetDexScreenerPrice("solana", "zu5nvbnvwfzau7dv8tozjumjyerbw4na4ujnhytuxqp")
-    #dex_price = [ds.GetDexScreenerPrice("solana", KET[2]), ds.GetDexScreenerPrice("solana", DHN[2]), ds.GetDexScreenerPrice("solana", YZYSQL[2]), ds.GetDexScreenerPrice("solana", EGG[2]), ds.GetDexScreenerPrice("solana", A8[2])]
-    print(dex)
+from aiogram.filters import Command
+
+# Ваш токен бота
+API_TOKEN = '7619938635:AAGumItYqcYnXOmHFK5zoDlLkTroU4MRkV8'
+
+# Инициализация бота и диспетчера
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
 
 
+# Обработчик команды /start
+@dp.message(Command("start"))
+async def send_welcome(message: types.Message):
+    await message.reply("Привет! Я бот, который покажет тебе ID твоего чата.")
+
+# Обработчик любых сообщений
+@dp.message()
+async def show_chat_id(message: types.Message):
+    # Получаем ID чата
+    chat_id = message.chat.id
+    await message.reply(f"Твой ID чата: {chat_id}")
+
+# Основная функция запуска бота
+async def main():
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.session.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())
