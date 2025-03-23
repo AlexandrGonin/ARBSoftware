@@ -30,7 +30,7 @@ types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJ
 
 # Списки ниже содержат по 3 элемента - ключевые слова для разных обменников [mex_fut, mex_spot, dex_price]
 
-KET = ["KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7"]
+KET = ["KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7", "avalanche"]
 DHN = ["DHN_USDT", "DHNyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
 YZYSQL = ["YZYSQL_USDT", "YZYSQLyiwrYJFskUPiHa7hkeR8V UtAeFoSYbKedZNsDvCN"]
 EGG = ["EGG_USDT", "EGGyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
@@ -44,7 +44,7 @@ async def condition_check_loop(chat_id):
     ])
     while True:
         mexc_fut = [mexc.get_futures_mexc_price(KET[0])]
-        dex_price = [ds.GetDexScreenerPrice("avalanche", KET[1])]
+        dex_price = [ds.GetDexScreenerPrice(KET[2], KET[1])]
         spred = round(100 - ((float(mexc_fut[0])/float(dex_price[0]))*100), 5)
         # spred2 = round(100 - ((float(mexc_spot)/float(dex_price))*100), 5)
         if abs(spred)>max_spred:

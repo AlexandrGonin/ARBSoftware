@@ -20,8 +20,9 @@ YZYSQL = ["YZYSQL_USDT", "YZYSQLUSDT", "YZYSQLyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZ
 EGG = ["EGG_USDT", "EGGUSDT", "EGGyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
 A8 = ["A8_USDT", "A8USDT", "A8yiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
 while True:
-    dex_price = [ds.GetDexScreenerPrice("avalanche", KET[2]), ds.GetDexScreenerPrice("ethereum", DHN[2]), ds.GetDexScreenerPrice("solana", YZYSQL[2]), ds.GetDexScreenerPrice("solana", EGG[2]), ds.GetDexScreenerPrice("solana", A8[2])]
-    mexc_fut = [mexc.get_futures_mexc_price(KET[0]), mexc.get_futures_mexc_price(DHN[0]), mexc.get_futures_mexc_price(YZYSQL[0]), mexc.get_futures_mexc_price(EGG[0]), mexc.get_futures_mexc_price(A8[0])]
+    mexc_fut = mexc.get_futures_mexc_price(DHN[0])
+    dex_price = ds.GetDexScreenerPrice("ethereum", DHN[2])
+    
     print(mexc_fut, dex_price)
 
 
