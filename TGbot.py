@@ -17,12 +17,12 @@ import aiogram.utils.markdown as fmt
 
 logging.basicConfig(level=logging.INFO)
 # Объект бота
-bot = Bot(token="7619938635:AAGumItYqcYnXOmHFK5zoDlLkTroU4MRkV8")
+bot = Bot(token="8031545073:AAFppT7ziBlV3vpkn9zflITk_GmPnLSYpDY")
 # Диспетчер
 dp = Dispatcher()
 
 delay = 0
-chat_id=1353395168
+chat_id=(-1002501950419)
 
 
 types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"), types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/JUP_USDT?utm_source=mexc&utm_medium=pagehowtobuyfuturesbuttonJUP&utm_campaign=pagefuturesJUP&inviteCode=mexc-HtbFuBuFutu")
@@ -51,9 +51,9 @@ async def condition_check_loop(chat_id):
             max_spred=abs(spred)
 
         print(mexc_fut, dex_price, spred, max_spred)
-        time.sleep(delay)
 
-        if abs(spred) > 4 and cond == False:
+
+        if spred < -5 and cond == False:
             await bot.send_message(chat_id,
                 fmt.text(
                     fmt.text(fmt.hbold("Token:  KET")),
@@ -64,7 +64,7 @@ async def condition_check_loop(chat_id):
                     
                     sep="\n\n",),parse_mode="HTML",reply_markup=keyboard)  # Добавляем клавиатуру к сообщению
             cond = True
-        elif abs(spred) < 1 and cond == True:
+        elif spred > -1 and cond == True:
             cond = False
             await bot.send_message(chat_id,
                 fmt.text(
