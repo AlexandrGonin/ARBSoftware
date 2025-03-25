@@ -29,13 +29,13 @@ async def GetDexScreenerPrice(chain_id, token_address):
         return response_text[0]["priceUsd"]
 
     except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+        #print(f"Request error: {e}")
         return None
     except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
+        #print(f"JSON decode error: {e}")
         return None
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        #print(f"An unexpected error occurred: {e}")
         return None
     
 # Example Usage:
