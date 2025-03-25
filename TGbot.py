@@ -16,72 +16,77 @@ from aiogram.utils.markdown import bold
 import aiogram.utils.markdown as fmt
 
 logging.basicConfig(level=logging.INFO)
-# Объект бота
 bot = Bot(token="8031545073:AAFppT7ziBlV3vpkn9zflITk_GmPnLSYpDY")
-# Диспетчер
 dp = Dispatcher()
 
 delay = 0
 chat_id=(-1002501950419)
 
+KET = ["KET", "KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7", "avalanche"]
+DHN = ["DHN", "DHN_USDT", "0x32462bA310E447eF34FF0D15BCE8613aa8C4A244", "ethereum"]
+A8 = ["A8", "A8_USDT", "0x3E5A19c91266aD8cE2477B91585d1856B84062dF", "ethereum"]
+JUP = ["JUP", "JUP_USDT", "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", "solana"]
+tokens=[DHN,A8,JUP]
+tasks = []
 
-types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"), types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/JUP_USDT?utm_source=mexc&utm_medium=pagehowtobuyfuturesbuttonJUP&utm_campaign=pagefuturesJUP&inviteCode=mexc-HtbFuBuFutu")
-
-
-# Списки ниже содержат по 3 элемента - ключевые слова для разных обменников [mex_fut, mex_spot, dex_price]
-
-KET = ["KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7", "avalanche"]
-DHN = ["DHN_USDT", "DHNyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-YZYSQL = ["YZYSQL_USDT", "YZYSQLyiwrYJFskUPiHa7hkeR8V UtAeFoSYbKedZNsDvCN"]
-EGG = ["EGG_USDT", "EGGyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-A8 = ["A8_USDT", "A8yiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"]
-
-async def condition_check_loop(chat_id):
-    max_spred=0
-    cond = False
+async def bot_loop(chat_id):
+    c=0
+    conds = [False]*len(tokens)
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
         [types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/KET_USDT")]
     ])
+    mexc_fut,dex_price,spreds=[],[],[]
     while True:
-        mexc_fut = [mexc.get_futures_mexc_price(KET[0])]
-        dex_price = [ds.GetDexScreenerPrice(KET[2], KET[1])]
-        spred = round(100 - ((float(mexc_fut[0])/float(dex_price[0]))*100), 5)
-        # spred2 = round(100 - ((float(mexc_spot)/float(dex_price))*100), 5)
-        if abs(spred)>max_spred:
-            max_spred=abs(spred)
+        c=0
+        mexc_fut,dex_price,spreds,tasks=[],[],[],[]
+        for num in range(len(tokens)):
+            mexc_fut_value = asyncio.create_task(mexc.get_futures_mexc_price(tokens[num][1]))
+            dex_price_value = asyncio.create_task(ds.GetDexScreenerPrice(tokens[num][3], tokens[num][2]))
+  
+            tasks.append(mexc_fut_value)
+            tasks.append(dex_price_value)
 
-        print(mexc_fut, dex_price, spred, max_spred)
+        results = await asyncio.gather(*tasks)
+        for result in results:
+            mexc_fut.append(result) if c%2==0 else dex_price.append(result)	
+            c+=1
+        
+        await asyncio.sleep(delay)
 
+        for num in range(len(tokens)):
+            spreds.append(round(100 - ((float(mexc_fut[num])/float(dex_price[num]))*100), 5))
+            print("{",mexc_fut[num], dex_price[num], spreds[num],"}  ",end="")
 
-        if spred < -5 and cond == False:
-            await bot.send_message(chat_id,
-                fmt.text(
-                    fmt.text(fmt.hbold("Token:  KET")),
-                    fmt.text(fmt.hbold("MEXC Futures"), mexc_fut),
-                    fmt.text(fmt.hbold("DEX Screener"), dex_price),
-                    fmt.text(fmt.hbold("Спред: "),  spred),
-                    fmt.text(fmt.hbold("Открыть short")),
-                    
-                    sep="\n\n",),parse_mode="HTML",reply_markup=keyboard)  # Добавляем клавиатуру к сообщению
-            cond = True
-        elif spred > -1 and cond == True:
-            cond = False
-            await bot.send_message(chat_id,
-                fmt.text(
-                    fmt.text(fmt.hbold("Token:  KET")),
-                    fmt.text(fmt.hbold("MEXC Futures"), mexc_fut),
-                    fmt.text(fmt.hbold("DEX Screener"), dex_price),
-                    fmt.text(fmt.hbold("Спред: "),  spred),
-                    fmt.text(fmt.hbold("Закрыть short")),
-                    sep="\n\n",), parse_mode="HTML",reply_markup=keyboard)
+        print("   ")
+        
+        for num in range(len(tokens)):
+            if spreds[num] < -5 and conds[num] == False:
+                bot.send_message(chat_id,
+                    fmt.text(
+                        fmt.text(fmt.hbold("Token: ", tokens[num][0])),
+                        fmt.text(fmt.hbold("MEXC Futures"), mexc_fut[num]),
+                        fmt.text(fmt.hbold("DEX Screener"), dex_price[num]),
+                        fmt.text(fmt.hbold("Спред: "),  spreds[num]),
+                        fmt.text(fmt.hbold("Открыть short")),
 
-        #await bot.send_message(chat_id, "Цена mex_fut: "+str(*mexc_fut)+" Цена dex: "+str(dex_price)+" Спред: "+str(spred)+" Макс. спред: "+str(max_spred))
+                        sep="\n\n",),parse_mode="HTML",reply_markup=keyboard)  # Добавляем клавиатуру к сообщению
+                conds[num] = True
+            elif spreds[num] > -1 and conds[num] == True:
+                conds[num] = False
+                await bot.send_message(chat_id,
+                    fmt.text(
+                        fmt.text(fmt.hbold("Token: ", tokens[num][0])),
+                        fmt.text(fmt.hbold("MEXC Futures"), mexc_fut[num]),
+                        fmt.text(fmt.hbold("DEX Screener"), dex_price[num]),
+                        fmt.text(fmt.hbold("Спред: "),  spreds[num]),
+                        fmt.text(fmt.hbold("Закрыть short")),
+                        sep="\n\n",), parse_mode="HTML",reply_markup=keyboard)
+
     
 @dp.message(Command("start"))
-async def subscribe_to_condition(message: types.Message):
+async def starting(message: types.Message):
     chat_id = message.chat.id
-    # Правильный вызов асинхронной функции с использованием await
-    await condition_check_loop(chat_id)
+    await bot_loop(chat_id)
 
 async def main():
     try:
@@ -91,44 +96,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-#print("MEXC Futures price: ", mexc.get_futures_mexc_price("JUP_USDT"))
-#print("MEXC Spot price: ", mexc.get_spot_mexc_price("JUPUSDT"))
-#print("Dex Screener price: ", ds.GetDexScreenerPrice("solana", "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"))
-#print("GMGN AI price: ", gmgn.GetGmgnPrice("https://gmgn.ai/sol/token/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"))
-
-
-
-
-# @dp.message(Command("start"))
-# async def cmd_start(message: types.Message):
-#     mexc_fut = mexc.get_futures_mexc_price("JUP_USDT")
-#     mexc_spot = mexc.get_spot_mexc_price("JUPUSDT")
-#     dex_price = ds.GetDexScreenerPrice("solana", "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN")
-#     spred1 = round(100 - ((float(mexc_fut)/float(dex_price))*100), 5)
-#     spred2 = round(100 - ((float(mexc_spot)/float(dex_price))*100), 5)
-
-#     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-#         [types.InlineKeyboardButton(text="GMGN", url="https://gmgn.ai/sol/token/JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN")],
-#         [types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/JUP_USDT?utm_source=mexc&utm_medium=pagehowtobuyfuturesbuttonJUP&utm_campaign=pagefuturesJUP&inviteCode=mexc-HtbFuBuFutu")]
-#     ])
-
-#     await message.answer(
-#         fmt.text(
-#             fmt.text(fmt.hbold("Token:  JUP")),
-#             fmt.text(fmt.hbold("MEXC Spot"), (mexc_spot)),
-#             fmt.text(fmt.hbold("MEXC-DEX"),  spred1),
-#             fmt.text(fmt.hbold("SPOT-DEX"), spred2),
-#             fmt.text(fmt.hbold("MEXC Futures"), mexc_fut),
-#             fmt.text(fmt.hbold("DEX Screener"), dex_price),
-#             sep="\n\n",
-
-#         ),
-#         parse_mode="HTML",
-#         reply_markup=keyboard  # Добавляем клавиатуру к сообщению
-#     )
-
-# # Запуск процесса поллинга новых апдейтов
-# async def main():
-#     await dp.start_polling(bot)
-
