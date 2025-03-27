@@ -1,14 +1,11 @@
 import sys
 sys.path.append("dex screener")
-sys.path.append("gmgn")
 sys.path.append("mexc")
 import dex_screener_api as ds
-#import gmgn_api as gmgn
 import mexc_api as mexc
 
 import asyncio
 import logging
-import aiogram
 import time
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -19,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token="8031545073:AAFppT7ziBlV3vpkn9zflITk_GmPnLSYpDY")
 dp = Dispatcher()
 
-delay = 1.5
+
 chat_id=(-1002501950419)
 
 KET = ["KET", "KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7", "avalanche"]
@@ -49,15 +46,24 @@ TIBBIR = ["TIBBIR","TIBBIR_USDT","0xA4A2E2ca3fBfE21aed83471D28b6f65A233C6e00","b
 
 tokens=[DHN,A8,JUP,DOGINME,MUBARAK,TUT,FORM,SZN,SIREN,BR,BUBB,TAT,AFT,APX,BOME,ETHFI,XRP,PEPE,TRUMP,ENA,PARTI,TIBBIR]
 tasks = []
+is_polling = False
+
+if sys.platform == 'win32':
+	asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 async def bot_loop(chat_id):
+    delay = 2
+    balance = 10
     c=0
-    conds = [False]*len(tokens)
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="MEXC", url="https://futures.mexc.com/ru-RU/exchange/KET_USDT")]
-    ])
+    conds=[]
+    for num in range(len(tokens)):
+        conds.append([0,0])
+
     mexc_fut,dex_price,spreds=[],[],[]*len(tokens)
     while True:
+        is_polling = True
+        print(" _____________________________________________________ ")
+        print("|                                                      |")
         c=0
         mexc_fut,dex_price,spreds,tasks=[],[],[],[]
         for num in range(len(tokens)):
@@ -73,49 +79,64 @@ async def bot_loop(chat_id):
         for result in results:
             mexc_fut.append(result) if c%2==0 else dex_price.append(result)	
             c+=1
-        
-       
 
         for num in range(len(tokens)):
-            try:
+                keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+                [types.InlineKeyboardButton(text="MEXC", url=f"https://futures.mexc.com/ru-RU/exchange/{tokens[num][1]}")]
+                ])
+            
                 spreds.append(round(100 - ((float(mexc_fut[num])/float(dex_price[num]))*100), 5))
-                print("{",mexc_fut[num], dex_price[num], spreds[num],"}  ",end="")
+                print("TOKEN:",tokens[num][0]," {",mexc_fut[num], dex_price[num], spreds[num],"}  ")
 
-                if spreds[num] < -5 and conds[num] == False:
-                    bot.send_message(chat_id,
-                        fmt.text(
-                            fmt.text(fmt.hbold("Token: ", tokens[num][0])),
-                            fmt.text(fmt.hbold("MEXC Futures"), mexc_fut[num]),
-                            fmt.text(fmt.hbold("DEX Screener"), dex_price[num]),
-                            fmt.text(fmt.hbold("Спред: "),  spreds[num]),
-                            fmt.text(fmt.hbold("Открыть short")),
-
-                            sep="\n\n",),parse_mode="HTML",reply_markup=keyboard)  # Добавляем клавиатуру к сообщению
-                    conds[num] = True
-                elif spreds[num] > -1 and conds[num] == True:
-                    conds[num] = False
+                if spreds[num] < -5 and conds[num][0] == 0:
+                    count = ((balance*0.1)//mexc_fut[num])
+                    cost = count*mexc_fut[num]
+                    balance-=cost
+                    conds[num][0]=count
+                    conds[num][1]=mexc_fut[num]
                     await bot.send_message(chat_id,
                         fmt.text(
                             fmt.text(fmt.hbold("Token: ", tokens[num][0])),
                             fmt.text(fmt.hbold("MEXC Futures"), mexc_fut[num]),
                             fmt.text(fmt.hbold("DEX Screener"), dex_price[num]),
                             fmt.text(fmt.hbold("Спред: "),  spreds[num]),
-                            fmt.text(fmt.hbold("Закрыть short")),
+                            fmt.text(fmt.hbold("Открылся short на сумму: "), cost),
+                            fmt.text(fmt.hbold("В количестве: "), conds[num][0]),
+                            fmt.text(fmt.hbold("Баланс: "), balance),
+                            sep="\n\n",),parse_mode="HTML",reply_markup=keyboard)  # Добавляем клавиатуру к сообщению
+                    cost = 0
+                    count = 0
+                elif (spreds[num] > -1.5 and conds[num][0] != 0) or spreds[num] == None:
+                    if conds[num][1]>mexc_fut[num]:
+                        cost = conds[num][0]*conds[num][1]*(100+((100-100/(conds[num][1]/mexc_fut[num]))))/100
+                        balance+=cost
+                    else:
+                        cost = conds[num][0]*conds[num][1]*(100-((100-100/(conds[num][1]/mexc_fut[num]))))/100
+                        balance+=cost
+                    await bot.send_message(chat_id,
+                        fmt.text(
+                            fmt.text(fmt.hbold("Token: ", tokens[num][0])),
+                            fmt.text(fmt.hbold("MEXC Futures"), mexc_fut[num]),
+                            fmt.text(fmt.hbold("DEX Screener"), dex_price[num]),
+                            fmt.text(fmt.hbold("Спред: "),  spreds[num]),
+                            fmt.text(fmt.hbold("Закрылся short на сумму: "), ),
+                            fmt.text(fmt.hbold("В количестве: "), conds[num][0]),
+                            fmt.text(fmt.hbold("Баланс: "), balance),
                             sep="\n\n",), parse_mode="HTML",reply_markup=keyboard)
-            except:
-                spreds.append(None)
-                print("{",mexc_fut[num], dex_price[num], None,"}  ",end="")
+                    cost = 0
+                    conds[num][0] = 0
+                    conds[num][1] = 0
+
 
                 
-        print("   ")
-
-
-        await asyncio.sleep(delay)
+        print("|_____________________________________________________|")
+        time.sleep(delay)
     
 @dp.message(Command("start"))
 async def starting(message: types.Message):
     chat_id = message.chat.id
-    await bot_loop(chat_id)
+    if not(is_polling):
+        await bot_loop(chat_id)
 
 async def main():
     try:
