@@ -13,7 +13,7 @@ from aiogram.utils.markdown import bold
 import aiogram.utils.markdown as fmt
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token="8031545073:AAFppT7ziBlV3vpkn9zflITk_GmPnLSYpDY")
+bot = Bot(token="123")
 dp = Dispatcher()
 
 
