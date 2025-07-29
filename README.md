@@ -1,7 +1,5 @@
+Crypto bot that parses 2 exchanges and based on the price difference and writes recommendations in the tg bot
+
 tg@e250e
 
 tg@gonin2
-
-Чисто мой фейс когда увидел кентавра, а в карманах пердметы и чипсы:
-
-оу щит, кто вызвал картель? прибудет: в 13:56 чипсы созданы
