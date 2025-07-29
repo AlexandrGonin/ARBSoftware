@@ -13,11 +13,11 @@ from aiogram.utils.markdown import bold
 import aiogram.utils.markdown as fmt
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token="123")
+bot = Bot(token="YOUR TG BOT TOKEN")
 dp = Dispatcher()
 
 
-chat_id=(-1002501950419)
+chat_id=("YOUR CHAT ID (GROUP WITH FRIEND FOR EXAMPLE)")
 
 KET = ["KET", "KET_USDT", "0xFFFF003a6BAD9b743d658048742935fFFE2b6ED7", "avalanche"]
 
